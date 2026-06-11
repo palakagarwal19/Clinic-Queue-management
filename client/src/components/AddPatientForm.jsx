@@ -9,10 +9,22 @@ export default function AddPatientForm({ onAdded }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError('Patient name is required');
+      return;
+    }
+
+    if (trimmed.length > 100) {
+      setError('Name must be 100 characters or less');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const patient = await api.addPatient(name);
+      const patient = await api.addPatient(trimmed);
       setName('');
       onAdded?.(patient);
     } catch (err) {
@@ -34,6 +46,7 @@ export default function AddPatientForm({ onAdded }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter patient name"
+          maxLength={100}
           className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
           required
         />

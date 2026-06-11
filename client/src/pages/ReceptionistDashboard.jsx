@@ -4,20 +4,42 @@ import QueueControls from '../components/QueueControls.jsx';
 import WaitingQueueList from '../components/WaitingQueueList.jsx';
 import TokenDisplay from '../components/TokenDisplay.jsx';
 
+function LoadingSkeleton() {
+  return (
+    <div className="animate-pulse space-y-6">
+      <div className="h-4 w-40 rounded bg-slate-200" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="h-48 rounded-2xl bg-slate-100" />
+        <div className="h-48 rounded-2xl bg-slate-100" />
+      </div>
+      <div className="h-64 rounded-2xl bg-slate-100" />
+    </div>
+  );
+}
+
 export default function ReceptionistDashboard() {
-  const { queueState, connected } = useSocket();
+  const { queueState, connected, loading } = useSocket();
+
+  if (loading && !queueState) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <span
           className={`inline-block h-2.5 w-2.5 rounded-full ${
-            connected ? 'bg-emerald-500' : 'bg-red-400'
+            connected ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'
           }`}
         />
         <span className="text-sm text-slate-500">
-          {connected ? 'Connected — live updates' : 'Connecting...'}
+          {connected ? 'Connected — live updates' : 'Offline — polling every 5s'}
         </span>
+        {queueState?.queueHealth === 'degraded' && (
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+            Queue sync issue detected — use Call Next to reconcile
+          </span>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -28,9 +50,7 @@ export default function ReceptionistDashboard() {
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Queue Controls</h2>
-          <QueueControls
-            consultationTime={queueState?.consultationTimeMinutes}
-          />
+          <QueueControls consultationTime={queueState?.consultationTimeMinutes} />
         </section>
       </div>
 

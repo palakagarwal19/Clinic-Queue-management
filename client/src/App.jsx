@@ -21,22 +21,31 @@ function NavLink({ to, children }) {
 }
 
 export default function App() {
+  const location = useLocation();
+  const isDisplayMode = location.pathname === '/display';
+
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Clinic Queue System</h1>
-            <p className="text-sm text-slate-500">Real-time patient queue management</p>
+      {!isDisplayMode && (
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Clinic Queue System</h1>
+              <p className="text-sm text-slate-500">Real-time patient queue management</p>
+            </div>
+            <nav className="flex flex-wrap gap-2">
+              <NavLink to="/">Receptionist</NavLink>
+              <NavLink to="/display">Patient Display</NavLink>
+            </nav>
           </div>
-          <nav className="flex flex-wrap gap-2">
-            <NavLink to="/">Receptionist</NavLink>
-            <NavLink to="/display">Patient Display</NavLink>
-          </nav>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main
+        className={`mx-auto px-4 py-6 ${
+          isDisplayMode ? 'max-w-5xl' : 'max-w-6xl'
+        }`}
+      >
         <Routes>
           <Route path="/" element={<ReceptionistDashboard />} />
           <Route path="/display" element={<PatientDisplay />} />

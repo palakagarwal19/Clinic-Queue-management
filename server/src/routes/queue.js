@@ -1,16 +1,21 @@
 import { Router } from 'express';
-import { callNextToken, getQueueState } from '../services/queueService.js';
+import { callNextToken, getQueueState, resetQueue } from '../services/queueService.js';
 import { broadcastQueueState } from '../socket/index.js';
 
 const router = Router();
+
+function handleError(res, error, fallbackMessage) {
+  console.error(fallbackMessage, error);
+  const status = error.statusCode || 500;
+  res.status(status).json({ error: error.message || fallbackMessage });
+}
 
 router.get('/state', async (_req, res) => {
   try {
     const state = await getQueueState();
     res.json(state);
   } catch (error) {
-    console.error('Get queue state error:', error);
-    res.status(500).json({ error: 'Failed to fetch queue state' });
+    handleError(res, error, 'Failed to fetch queue state');
   }
 });
 
@@ -34,8 +39,18 @@ router.post('/next', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Call next token error:', error);
-    res.status(500).json({ error: 'Failed to call next token' });
+    handleError(res, error, 'Call next token error:');
+  }
+});
+
+router.post('/reset', async (req, res) => {
+  try {
+    const result = await resetQueue();
+    const io = req.app.get('io');
+    await broadcastQueueState(io);
+    res.json(result);
+  } catch (error) {
+    handleError(res, error, 'Reset queue error:');
   }
 });
 

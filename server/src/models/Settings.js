@@ -10,8 +10,14 @@ const settingsSchema = new mongoose.Schema(
     },
     lastTokenNumber: {
       type: Number,
-      default: 0,
+      default: 100,
+      min: 0,
     },
+    queueLocked: {
+      type: Boolean,
+      default: false,
+    },
+    lockedAt: Date,
   },
   { timestamps: true }
 );

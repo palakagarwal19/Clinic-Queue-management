@@ -25,8 +25,18 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
 
+  removePatient: (id) =>
+    request(`/api/patients/${id}`, {
+      method: 'DELETE',
+    }),
+
   callNext: () =>
     request('/api/queue/next', {
+      method: 'POST',
+    }),
+
+  resetQueue: () =>
+    request('/api/queue/reset', {
       method: 'POST',
     }),
 

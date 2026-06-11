@@ -11,10 +11,11 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 100,
     },
     status: {
       type: String,
-      enum: ['waiting', 'serving', 'completed'],
+      enum: ['waiting', 'serving', 'completed', 'cancelled'],
       default: 'waiting',
     },
     servedAt: Date,
@@ -22,5 +23,7 @@ const patientSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+patientSchema.index({ status: 1, createdAt: 1 });
 
 export default mongoose.model('Patient', patientSchema);

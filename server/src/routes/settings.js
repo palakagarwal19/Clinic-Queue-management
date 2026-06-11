@@ -9,8 +9,8 @@ router.put('/consultation-time', async (req, res) => {
     const { minutes } = req.body;
     const parsed = Number(minutes);
 
-    if (!parsed || parsed < 1 || parsed > 120) {
-      return res.status(400).json({ error: 'Consultation time must be between 1 and 120 minutes' });
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 120) {
+      return res.status(400).json({ error: 'Consultation time must be a whole number between 1 and 120 minutes' });
     }
 
     const settings = await setConsultationTime(parsed);

@@ -9,8 +9,25 @@ function formatWaitTime(minutes) {
   return mins > 0 ? `~${hours}h ${mins}m` : `~${hours}h`;
 }
 
+function LoadingDisplay() {
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600" />
+        <p className="text-slate-500">Loading queue...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function PatientDisplay() {
-  const { queueState, connected } = useSocket();
+  const { queueState, connected, loading } = useSocket();
+  const nextUp = queueState?.waitingQueue?.slice(0, 5) ?? [];
+  const nextToken = nextUp[0]?.tokenNumber ?? null;
+
+  if (loading && !queueState) {
+    return <LoadingDisplay />;
+  }
 
   return (
     <div className="min-h-[70vh]">
@@ -31,20 +48,11 @@ export default function PatientDisplay() {
             Now Serving
           </p>
           <div className="mt-4">
-            <TokenDisplay
-              token={queueState?.currentToken}
-              label=""
-              size="xl"
-            />
+            <TokenDisplay token={queueState?.currentToken} label="" size="xl" />
           </div>
-          {queueState?.currentPatientName && (
-            <p className="mt-4 text-xl text-slate-600 sm:text-2xl">
-              {queueState.currentPatientName}
-            </p>
-          )}
         </div>
 
-        <div className="grid gap-6 border-t border-slate-200 pt-8 sm:grid-cols-2">
+        <div className="grid gap-6 border-t border-slate-200 pt-8 sm:grid-cols-3">
           <div className="rounded-2xl bg-slate-50 p-6 text-center">
             <p className="text-sm font-medium uppercase tracking-wider text-slate-500">
               Tokens Ahead
@@ -54,26 +62,35 @@ export default function PatientDisplay() {
             </p>
           </div>
 
+          <div className="rounded-2xl bg-indigo-50 p-6 text-center">
+            <p className="text-sm font-medium uppercase tracking-wider text-indigo-700">
+              Next Token
+            </p>
+            <p className="mt-2 text-5xl font-bold tabular-nums text-indigo-800 sm:text-6xl">
+              {nextToken != null ? `#${nextToken}` : '—'}
+            </p>
+          </div>
+
           <div className="rounded-2xl bg-teal-50 p-6 text-center">
             <p className="text-sm font-medium uppercase tracking-wider text-teal-700">
-              Estimated Wait
+              Est. Wait (last in queue)
             </p>
-            <p className="mt-2 text-4xl font-bold text-teal-800 sm:text-5xl">
+            <p className="mt-2 text-3xl font-bold text-teal-800 sm:text-4xl">
               {formatWaitTime(queueState?.estimatedWaitMinutes ?? 0)}
             </p>
             <p className="mt-2 text-sm text-teal-600">
-              Based on {queueState?.consultationTimeMinutes ?? 10} min per consultation
+              {queueState?.consultationTimeMinutes ?? 10} min per visit
             </p>
           </div>
         </div>
 
-        {queueState?.waitingQueue?.length > 0 && (
+        {nextUp.length > 0 && (
           <div className="mt-8 border-t border-slate-200 pt-8">
             <p className="mb-4 text-center text-sm font-medium uppercase tracking-wider text-slate-500">
               Up Next
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {queueState.waitingQueue.slice(0, 5).map((patient) => (
+              {nextUp.map((patient) => (
                 <span
                   key={patient.id}
                   className="rounded-full bg-slate-100 px-4 py-2 text-lg font-semibold text-slate-700"
@@ -81,7 +98,7 @@ export default function PatientDisplay() {
                   #{patient.tokenNumber}
                 </span>
               ))}
-              {queueState.waitingQueue.length > 5 && (
+              {(queueState?.waitingQueue?.length ?? 0) > 5 && (
                 <span className="rounded-full bg-slate-100 px-4 py-2 text-lg text-slate-500">
                   +{queueState.waitingQueue.length - 5} more
                 </span>
