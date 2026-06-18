@@ -5,17 +5,26 @@ export default function TokenDisplay({ token, label = 'Current Token', size = 'l
       : 'text-5xl sm:text-6xl';
 
   return (
-    <div className="text-center">
-      <p className="mb-2 text-sm font-medium uppercase tracking-wider text-slate-500 sm:text-base">
-        {label}
-      </p>
+    <div className="text-center py-4">
+      {label && (
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
+          {label}
+        </p>
+      )}
       <div
-        className={`font-bold tabular-nums text-teal-600 ${sizeClasses} ${
-          token == null ? 'text-slate-300' : ''
+        className={`font-black tabular-nums leading-none ${sizeClasses} ${
+          token == null
+            ? 'text-slate-200'
+            : 'bg-gradient-to-br from-teal-500 to-teal-700 bg-clip-text text-transparent'
         }`}
       >
         {token != null ? `#${token}` : '—'}
       </div>
+      {token != null && (
+        <div className="mt-3 flex justify-center">
+          <span className="inline-block h-1 w-16 rounded-full bg-gradient-to-r from-teal-400 to-teal-600" />
+        </div>
+      )}
     </div>
   );
 }
