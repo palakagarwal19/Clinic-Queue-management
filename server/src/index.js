@@ -11,6 +11,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { connectDB } from './config/db.js';
 import { setupSocket } from './socket/index.js';
+import { syncTokenCounter } from './services/queueService.js';
 import patientsRouter from './routes/patients.js';
 import queueRouter from './routes/queue.js';
 import settingsRouter from './routes/settings.js';
@@ -55,10 +56,43 @@ async function releaseStaleLock() {
   }
 }
 
+// Sync lastTokenNumber to highest existing token to prevent conflicts
+async function syncTokenCounter() {
+  try {
+    const highest = await Patient.findOne().sort({ tokenNumber: -1 }).select('tokenNumber');
+    if (highest) {
+      await Settings.updateOne(
+        { _id: SETTINGS_ID, lastTokenNumber: { $lt: highest.tokenNumber } },
+        { $set: { lastTokenNumber: highest.tokenNumber } }
+      );
+      console.log(`Token counter synced to #${highest.tokenNumber}`);
+    }
+  } catch {
+    // non-fatal
+  }
+}
+
+// Sync lastTokenNumber to highest existing token to prevent conflicts
+async function syncTokenCounter() {
+  try {
+    const highest = await Patient.findOne().sort({ tokenNumber: -1 }).select('tokenNumber');
+    if (highest) {
+      await Settings.updateOne(
+        { _id: SETTINGS_ID, lastTokenNumber: { $lt: highest.tokenNumber } },
+        { $set: { lastTokenNumber: highest.tokenNumber } }
+      );
+      console.log(`Token counter synced to #${highest.tokenNumber}`);
+    }
+  } catch {
+    // non-fatal
+  }
+}
+
 async function start() {
   try {
     await connectDB(MONGODB_URI);
     await releaseStaleLock();
+    await syncTokenCounter();
     httpServer.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });

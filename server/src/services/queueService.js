@@ -169,6 +169,21 @@ export async function resetQueue() {
   });
 }
 
+export async function syncTokenCounter() {
+  try {
+    const highest = await Patient.findOne().sort({ tokenNumber: -1 }).select('tokenNumber');
+    if (highest && highest.tokenNumber) {
+      await Settings.updateOne(
+        { _id: SETTINGS_ID, lastTokenNumber: { $lt: highest.tokenNumber } },
+        { $set: { lastTokenNumber: highest.tokenNumber } }
+      );
+      console.log(`Token counter synced to #${highest.tokenNumber}`);
+    }
+  } catch (err) {
+    console.error('Token sync warning:', err.message);
+  }
+}
+
 export async function setConsultationTime(minutes) {
   const settings = await getOrCreateSettings();
   settings.consultationTimeMinutes = minutes;
