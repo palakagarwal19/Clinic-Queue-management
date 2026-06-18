@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// Load .env from server/ folder (two levels up from src/)
+config({ path: resolve(__dirname, '../../.env') });
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
@@ -37,9 +43,22 @@ app.use('/api/settings', settingsRouter);
 
 setupSocket(io);
 
+async function releaseStaleLock() {
+  try {
+    const { default: mongoose } = await import('mongoose');
+    await mongoose.connection.db
+      .collection('settings')
+      .updateMany({ queueLocked: true }, { $set: { queueLocked: false } });
+    console.log('Queue lock cleared on startup');
+  } catch {
+    // non-fatal
+  }
+}
+
 async function start() {
   try {
     await connectDB(MONGODB_URI);
+    await releaseStaleLock();
     httpServer.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
