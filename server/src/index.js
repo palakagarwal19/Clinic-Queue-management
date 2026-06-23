@@ -42,7 +42,12 @@ app.use('/api/settings', settingsRouter);
 
 // Serve React build in production
 if (IS_PROD) {
-  const clientDist = resolve(__dirname, '../../../client/dist');
+  // Try relative from this file, then fall back to cwd-based path
+  const fromFile = resolve(__dirname, '../../..', 'client', 'dist');
+  const fromCwd = resolve(process.cwd(), 'client', 'dist');
+  const clientDist = fromFile;
+  console.log('Serving static from:', clientDist);
+  console.log('CWD-based path would be:', fromCwd);
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(resolve(clientDist, 'index.html'));
