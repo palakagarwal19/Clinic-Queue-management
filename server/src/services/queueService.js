@@ -79,6 +79,15 @@ export async function addPatient(name) {
   const trimmed = name.trim();
 
   return withQueueLock(async () => {
+    // Always sync counter to highest existing token before incrementing
+    const highest = await Patient.findOne().sort({ tokenNumber: -1 }).select('tokenNumber');
+    if (highest?.tokenNumber) {
+      await Settings.updateOne(
+        { _id: SETTINGS_ID, lastTokenNumber: { $lt: highest.tokenNumber } },
+        { $set: { lastTokenNumber: highest.tokenNumber } }
+      );
+    }
+
     await Settings.updateOne(
       { _id: SETTINGS_ID, lastTokenNumber: { $lt: TOKEN_NUMBER_BASE } },
       { $set: { lastTokenNumber: TOKEN_NUMBER_BASE } }
