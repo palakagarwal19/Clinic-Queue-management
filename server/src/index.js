@@ -3,8 +3,8 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// Load .env from server/ folder (two levels up from src/)
 config({ path: resolve(__dirname, '../../.env') });
+
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
@@ -23,21 +23,14 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinic
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: {
-    origin: CLIENT_URL,
-    methods: ['GET', 'POST', 'PUT'],
-  },
+  cors: { origin: CLIENT_URL, methods: ['GET', 'POST', 'PUT', 'DELETE'] },
 });
 
 app.set('io', io);
-
 app.use(cors({ origin: CLIENT_URL }));
 app.use(express.json());
 
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok' });
-});
-
+app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/patients', patientsRouter);
 app.use('/api/queue', queueRouter);
 app.use('/api/settings', settingsRouter);
@@ -51,38 +44,6 @@ async function releaseStaleLock() {
       .collection('settings')
       .updateMany({ queueLocked: true }, { $set: { queueLocked: false } });
     console.log('Queue lock cleared on startup');
-  } catch {
-    // non-fatal
-  }
-}
-
-// Sync lastTokenNumber to highest existing token to prevent conflicts
-async function syncTokenCounter() {
-  try {
-    const highest = await Patient.findOne().sort({ tokenNumber: -1 }).select('tokenNumber');
-    if (highest) {
-      await Settings.updateOne(
-        { _id: SETTINGS_ID, lastTokenNumber: { $lt: highest.tokenNumber } },
-        { $set: { lastTokenNumber: highest.tokenNumber } }
-      );
-      console.log(`Token counter synced to #${highest.tokenNumber}`);
-    }
-  } catch {
-    // non-fatal
-  }
-}
-
-// Sync lastTokenNumber to highest existing token to prevent conflicts
-async function syncTokenCounter() {
-  try {
-    const highest = await Patient.findOne().sort({ tokenNumber: -1 }).select('tokenNumber');
-    if (highest) {
-      await Settings.updateOne(
-        { _id: SETTINGS_ID, lastTokenNumber: { $lt: highest.tokenNumber } },
-        { $set: { lastTokenNumber: highest.tokenNumber } }
-      );
-      console.log(`Token counter synced to #${highest.tokenNumber}`);
-    }
   } catch {
     // non-fatal
   }
