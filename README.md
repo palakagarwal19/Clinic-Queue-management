@@ -81,6 +81,8 @@ Clinic-Queue-management/
 
 ## Socket Event Diagram
 
+![Socket Event Diagram](./socket-diagram.png)
+
 ```
 Receptionist clicks "Call Next"
         │
