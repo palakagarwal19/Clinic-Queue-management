@@ -19,21 +19,35 @@ import settingsRouter from './routes/settings.js';
 const PORT = process.env.PORT || 3001;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clinic-queue';
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: CLIENT_URL, methods: ['GET', 'POST', 'PUT', 'DELETE'] },
+  cors: {
+    origin: IS_PROD ? '*' : CLIENT_URL,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
 });
 
 app.set('io', io);
-app.use(cors({ origin: CLIENT_URL }));
+app.use(cors({ origin: IS_PROD ? '*' : CLIENT_URL }));
 app.use(express.json());
 
+// API routes
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/patients', patientsRouter);
 app.use('/api/queue', queueRouter);
 app.use('/api/settings', settingsRouter);
+
+// Serve React build in production
+if (IS_PROD) {
+  const clientDist = resolve(__dirname, '../../../client/dist');
+  app.use(express.static(clientDist));
+  app.get('*', (_req, res) => {
+    res.sendFile(resolve(clientDist, 'index.html'));
+  });
+}
 
 setupSocket(io);
 

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { api } from '../api/client.js';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+// In production (same origin), connect to current host. In dev, use env var.
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
 const POLL_INTERVAL_MS = 5000;
 
 export function useSocket() {
