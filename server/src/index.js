@@ -42,7 +42,9 @@ app.use('/api/settings', settingsRouter);
 
 // Serve React build in production
 if (IS_PROD) {
-  const clientDist = resolve(process.cwd(), 'client', 'dist');
+  // On Render: cwd = /opt/render/project/src/server
+  // client/dist is at   /opt/render/project/src/client/dist
+  const clientDist = resolve(process.cwd(), '..', 'client', 'dist');
   console.log('Serving static from:', clientDist);
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
